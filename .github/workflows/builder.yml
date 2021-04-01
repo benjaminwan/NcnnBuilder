@@ -1,0 +1,112 @@
+name: Models Convertor
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+
+    env:
+      NCNN_VERSION: 20210322
+      PKG_NAME: ncnn-static-20210322-macos
+
+    steps:
+      # 检出代码
+      - uses: actions/checkout@v2
+
+      # 获取所有的git log和tag
+      - name: Unshallow
+        run: git fetch --prune --unshallow
+
+      # 下载并解压ncnn
+      - name: download ncnn source
+        run: |
+          wget -q https://github.com/Tencent/ncnn/archive/${{ env.NCNN_VERSION }}.zip -O ncnn-${{ env.NCNN_VERSION }}.zip
+          unzip -q ncnn-${{ env.NCNN_VERSION }}.zip
+
+      # 安装openmp
+      - name: install openmp
+        run: |
+          brew install libomp
+
+      # 复制编译脚本
+      - name: copy build script
+        run: |
+          cp build-ncnn-mac.sh ncnn-${{ env.NCNN_VERSION }}
+
+      # 编译ncnn for macos
+      - name: build ncnn
+        run: |
+          cd ncnn-${{ env.NCNN_VERSION }}
+          chmod a+x build-ncnn-mac.sh &&./build-ncnn-mac.sh
+
+      # install文件夹改名macos，并使用7z压缩
+      - name: 7zip
+        run: |
+          cd ncnn-${{ env.NCNN_VERSION }}/build-mac-Release
+          mv install macos
+          7z a ${{ env.PKG_NAME }}.7z macos
+
+      # 获取git log 从 previousTag 到 lastTag
+      - name: Get git log
+        id: git-log
+        run: |
+          previousTag=$(git describe --abbrev=0 --tags `git rev-list --tags --skip=1 --max-count=1`)
+          lastTag=$(git describe --abbrev=0 --tags)
+          echo "previousTag:$previousTag ~ lastTag:$lastTag"
+          log=$(git log $previousTag..$lastTag --pretty=format:'- %cd %an: %s\n' --date=format:'%Y-%m-%d %H:%M:%S')
+          echo "$log"
+          echo "::set-output name=log::"$log""
+
+      # 获取指定时区的时间
+      # https://github.com/marketplace/actions/get-time-action
+      - name: Get Time
+        id: time
+        uses: JantHsueh/get-time-action@master
+        with:
+          timeZone: 8
+
+      # 显示信息
+      - name: Show info
+        if: always()
+        run: |
+          echo '${{ steps.git-log.outputs.log }}'
+
+      # 向钉钉发送消息
+      # https://github.com/marketplace/actions/web-request-action
+      - name: dingtalk
+        uses: satak/webrequest-action@master
+        with:
+          url: ${{ secrets.DINGTALK_WEBHOOK }}
+          method: POST
+          payload: '{"msgtype": "text", "text": {"content": "版本更新: ${{ github.repository }}-版本号: ${{ github.ref }} \n 编译时间： ${{ steps.time.outputs.time }} \n 距上个正式版的更新记录: \n${{ steps.git-log.outputs.log }}"}}'
+          headers: '{"Content-Type": "application/json"}'
+
+      # 创建Changelog文件 triggered by git tag push
+      - name: Generate Changelog
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo -e '${{ steps.git-log.outputs.log }}' > Release.txt
+
+      # Cat Changelog triggered by git tag push
+      - name: Cat Changelog
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          cat Release.txt
+
+      # 创建Release triggered by git tag push
+      # https://github.com/marketplace/actions/gh-release
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          body_path: Release.txt
+          draft: true
+          files: |
+            ncnn-${{ env.NCNN_VERSION }}/build-mac-Release/${{ env.PKG_NAME }}.7z
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
