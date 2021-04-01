@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-mkdir -p "build-mac-Release-CPU"
-pushd "build-mac-Release-CPU"
+mkdir build-mac-Release-CPU && cd build-mac-Release-CPU
 cmake -DCMAKE_BUILD_TYPE=Release \
     -DNCNN_OPENMP=ON \
     -DOpenMP_C_FLAGS="-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" \
@@ -15,6 +14,5 @@ cmake -DCMAKE_BUILD_TYPE=Release \
     -DNCNN_PYTHON=OFF \
     -DNCNN_VULKAN=OFF \
 ..
-make -j 2
-make install
-popd
+cmake --build . -j 2
+cmake --build . --target install

@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-mkdir -p "build-mac-Release-GPU"
-pushd "build-mac-Release-GPU"
-export VULKAN_SDK=`pwd`/vulkansdk-macos-1.2.162.0/macOS
+mkdir build-mac-Release-GPU && cd build-mac-Release-GPU
 cmake -DCMAKE_BUILD_TYPE=Release \
     -DNCNN_OPENMP=ON \
     -DOpenMP_C_FLAGS="-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" \
@@ -16,6 +14,5 @@ cmake -DCMAKE_BUILD_TYPE=Release \
     -DNCNN_PYTHON=OFF \
     -DNCNN_VULKAN=ON \
 ..
-make -j 2
-make install
-popd
+cmake --build . -j 2
+cmake --build . --target install
