@@ -1,4 +1,4 @@
-name: Models Convertor
+name: Builder
 
 on:
   workflow_dispatch:
