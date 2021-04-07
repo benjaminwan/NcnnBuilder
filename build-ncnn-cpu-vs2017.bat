@@ -14,8 +14,8 @@ call :cmakeParams "Visual Studio 15 2017" "v141" "Win32"
 GOTO:EOF
 
 :cmakeParams
-mkdir "build-%~2-%~3"
-pushd "build-%~2-%~3"
+mkdir "build-%~2-%~3-cpu"
+pushd "build-%~2-%~3-cpu"
 cmake -G "%~1" -T "%~2,host=x64" -A "%~3" -DCMAKE_INSTALL_PREFIX=install ^
   -DCMAKE_BUILD_TYPE=Release ^
   -DNCNN_VULKAN=OFF ^

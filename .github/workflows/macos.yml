@@ -67,6 +67,7 @@ jobs:
         run: |
           mv ncnn-${{ env.NCNN_VERSION }}/build-Release-CPU/install macos
           7z a ${{ env.CPU_PKG_NAME }}.7z macos
+          rm -r -f macos
 
       # 上传artifact
       - name: upload
@@ -87,6 +88,7 @@ jobs:
         run: |
           mv ncnn-${{ env.NCNN_VERSION }}/build-Release-GPU/install macos
           7z a ${{ env.GPU_PKG_NAME }}.7z macos
+          rm -r -f macos
 
       # 上传artifact
       - name: upload

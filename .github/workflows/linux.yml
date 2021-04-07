@@ -60,6 +60,7 @@ jobs:
         run: |
           mv ncnn-${{ env.NCNN_VERSION }}/build-Release-CPU/install linux
           7z a ${{ env.CPU_PKG_NAME }}.7z linux
+          rm -r -f linux
 
       # 上传artifact
       - name: upload
@@ -80,6 +81,7 @@ jobs:
         run: |
           mv ncnn-${{ env.NCNN_VERSION }}/build-Release-GPU/install linux
           7z a ${{ env.GPU_PKG_NAME }}.7z linux
+          rm -r -f linux
 
       # 上传artifact
       - name: upload
