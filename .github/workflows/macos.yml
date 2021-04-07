@@ -1,0 +1,96 @@
+name: macos
+
+on:
+  workflow_dispatch:
+
+jobs:
+  macos1015:
+    runs-on: macos-latest
+
+    env:
+      NCNN_VERSION: 20210322
+      CPU_PKG_NAME: ncnn-20210322-macos1015
+      GPU_PKG_NAME: ncnn-20210322-macos1015-vulkan
+
+    steps:
+      # 检出代码
+      - uses: actions/checkout@v2
+
+      # 检出ncnn
+      - name: checkout ncnn
+        uses: actions/checkout@v2
+        with:
+          repository: Tencent/ncnn
+          path: ncnn-${{ env.NCNN_VERSION }}
+          ref: ${{ env.NCNN_VERSION }}
+          submodules: recursive
+
+      # 安装openmp
+      - name: install openmp
+        run: |
+          brew install libomp
+
+      # 安装vulkan
+      - name: vulkansdk
+        if: steps.cache-vulkansdk.outputs.cache-hit != 'true'
+        run: |
+          wget https://sdk.lunarg.com/sdk/download/1.2.162.0/mac/vulkansdk-macos-1.2.162.0.dmg?Human=true -O vulkansdk-macos-1.2.162.0.dmg
+          hdiutil attach vulkansdk-macos-1.2.162.0.dmg
+          cp -r /Volumes/vulkansdk-macos-1.2.162.0 .
+          rm -rf vulkansdk-macos-1.2.162.0/Applications
+          find vulkansdk-macos-1.2.162.0 -type f | grep -v -E 'vulkan|glslang|MoltenVK' | xargs rm
+          hdiutil detach /Volumes/vulkansdk-macos-1.2.162.0
+
+      # 缓存vulkan
+      - name: cache-vulkansdk
+        id: cache-vulkansdk
+        uses: actions/cache@v1
+        with:
+          path: vulkansdk-macos-1.2.162.0
+          key: vulkansdk-macos-1.2.162.0
+
+      # 复制编译脚本
+      - name: copy build script
+        run: |
+          cp build-ncnn-cpu.sh ncnn-${{ env.NCNN_VERSION }}
+          cp build-ncnn-gpu.sh ncnn-${{ env.NCNN_VERSION }}
+          cp ncnn_cmake_options.txt ncnn-${{ env.NCNN_VERSION }}
+
+      # 编译ncnn cpu
+      - name: build cpu
+        run: |
+          cd ncnn-${{ env.NCNN_VERSION }}
+          chmod a+x build-ncnn-cpu.sh &&./build-ncnn-cpu.sh
+
+      # install文件夹改名linux，并使用7z压缩
+      - name: 7zip
+        run: |
+          mv ncnn-${{ env.NCNN_VERSION }}/build-Release-CPU/install macos
+          7z a ${{ env.CPU_PKG_NAME }}.7z macos
+
+      # 上传artifact
+      - name: upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.CPU_PKG_NAME }}
+          path: ${{ env.CPU_PKG_NAME }}.7z
+
+      # 编译ncnn gpu
+      - name: build gpu
+        run: |
+          export VULKAN_SDK=`pwd`/vulkansdk-macos-1.2.162.0/macOS
+          cd ncnn-${{ env.NCNN_VERSION }}
+          chmod a+x build-ncnn-gpu.sh &&./build-ncnn-gpu.sh
+
+      # install文件夹改名linux，并使用7z压缩
+      - name: 7zip
+        run: |
+          mv ncnn-${{ env.NCNN_VERSION }}/build-Release-GPU/install macos
+          7z a ${{ env.GPU_PKG_NAME }}.7z macos
+
+      # 上传artifact
+      - name: upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.GPU_PKG_NAME }}
+          path: ${{ env.GPU_PKG_NAME }}.7z

@@ -7,27 +7,101 @@ on:
       - '*'
 
 jobs:
-  build-macos:
-    runs-on: macos-latest
+  ubuntu1604:
+    runs-on: ubuntu-16.04
 
     env:
       NCNN_VERSION: 20210322
-      CPU_PKG_NAME: ncnn-20210322-macos
-      GPU_PKG_NAME: ncnn-20210322-macos-vulkan
+      CPU_PKG_NAME: ncnn-20210322-ubuntu1604
+      GPU_PKG_NAME: ncnn-20210322-ubuntu1604-vulkan
 
     steps:
       # 检出代码
       - uses: actions/checkout@v2
 
-      # 获取所有的git log和tag
-      - name: Unshallow
-        run: git fetch --prune --unshallow
+      # 检出ncnn
+      - name: checkout ncnn
+        uses: actions/checkout@v2
+        with:
+          repository: Tencent/ncnn
+          path: ncnn-${{ env.NCNN_VERSION }}
+          ref: ${{ env.NCNN_VERSION }}
+          submodules: recursive
 
-      # 下载并解压ncnn
-      #- name: download ncnn source
-      #  run: |
-      #    wget -q https://github.com/Tencent/ncnn/archive/${{ env.NCNN_VERSION }}.zip -O ncnn-${{ env.NCNN_VERSION }}.zip
-      #    unzip -q ncnn-${{ env.NCNN_VERSION }}.zip
+      # 安装vulkan
+      - name: vulkansdk
+        if: steps.cache-vulkansdk.outputs.cache-hit != 'true'
+        run: |
+          wget https://sdk.lunarg.com/sdk/download/1.2.148.1/linux/vulkansdk-linux-x86_64-1.2.148.1.tar.gz?Human=true -O vulkansdk-linux-x86_64-1.2.148.1.tar.gz
+          tar -xf vulkansdk-linux-x86_64-1.2.148.1.tar.gz
+          rm -rf 1.2.148.1/source 1.2.148.1/samples
+          find 1.2.148.1 -type f | grep -v -E 'vulkan|glslang' | xargs rm
+
+      # 缓存vulkan
+      - name: cache-vulkansdk
+        id: cache-vulkansdk
+        uses: actions/cache@v1
+        with:
+          path: "1.2.148.1"
+          key: vulkansdk-linux-x86_64-1.2.148.1
+
+      # 复制编译脚本
+      - name: copy build script
+        run: |
+          cp build-ncnn-cpu.sh ncnn-${{ env.NCNN_VERSION }}
+          cp build-ncnn-gpu.sh ncnn-${{ env.NCNN_VERSION }}
+          cp ncnn_cmake_options.txt ncnn-${{ env.NCNN_VERSION }}
+
+      # 编译ncnn cpu
+      - name: build cpu
+        run: |
+          cd ncnn-${{ env.NCNN_VERSION }}
+          chmod a+x build-ncnn-cpu.sh &&./build-ncnn-cpu.sh
+
+      # install文件夹改名linux，并使用7z压缩
+      - name: 7zip
+        run: |
+          mv ncnn-${{ env.NCNN_VERSION }}/build-Release-CPU/install linux
+          7z a ${{ env.CPU_PKG_NAME }}.7z linux
+
+      # 上传artifact
+      - name: upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.CPU_PKG_NAME }}
+          path: ${{ env.CPU_PKG_NAME }}.7z
+
+      # 编译ncnn gpu
+      - name: build gpu
+        run: |
+          export VULKAN_SDK=`pwd`/1.2.148.1/x86_64
+          cd ncnn-${{ env.NCNN_VERSION }}
+          chmod a+x build-ncnn-gpu.sh &&./build-ncnn-gpu.sh
+
+      # install文件夹改名linux，并使用7z压缩
+      - name: 7zip
+        run: |
+          mv ncnn-${{ env.NCNN_VERSION }}/build-Release-GPU/install linux
+          7z a ${{ env.GPU_PKG_NAME }}.7z linux
+
+      # 上传artifact
+      - name: upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.GPU_PKG_NAME }}
+          path: ${{ env.GPU_PKG_NAME }}.7z
+
+  macos1015:
+    runs-on: macos-latest
+
+    env:
+      NCNN_VERSION: 20210322
+      CPU_PKG_NAME: ncnn-20210322-macos1015
+      GPU_PKG_NAME: ncnn-20210322-macos1015-vulkan
+
+    steps:
+      # 检出代码
+      - uses: actions/checkout@v2
 
       # 检出ncnn
       - name: checkout ncnn
@@ -65,35 +139,155 @@ jobs:
       # 复制编译脚本
       - name: copy build script
         run: |
-          cp build-ncnn-mac-cpu.sh ncnn-${{ env.NCNN_VERSION }}
-          cp build-ncnn-mac-gpu.sh ncnn-${{ env.NCNN_VERSION }}
+          cp build-ncnn-cpu.sh ncnn-${{ env.NCNN_VERSION }}
+          cp build-ncnn-gpu.sh ncnn-${{ env.NCNN_VERSION }}
+          cp ncnn_cmake_options.txt ncnn-${{ env.NCNN_VERSION }}
 
-      # 编译ncnn cpu for macos
-      - name: build ncnn
+      # 编译ncnn cpu
+      - name: build cpu
         run: |
           cd ncnn-${{ env.NCNN_VERSION }}
-          chmod a+x build-ncnn-mac-cpu.sh &&./build-ncnn-mac-cpu.sh
+          chmod a+x build-ncnn-cpu.sh &&./build-ncnn-cpu.sh
 
-      # install文件夹改名macos，并使用7z压缩
+      # install文件夹改名linux，并使用7z压缩
       - name: 7zip
         run: |
-          cd ncnn-${{ env.NCNN_VERSION }}/build-mac-Release-CPU
-          mv install macos
+          mv ncnn-${{ env.NCNN_VERSION }}/build-Release-CPU/install macos
           7z a ${{ env.CPU_PKG_NAME }}.7z macos
 
-      # 编译ncnn gpu for macos
-      - name: build ncnn
+      # 上传artifact
+      - name: upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.CPU_PKG_NAME }}
+          path: ${{ env.CPU_PKG_NAME }}.7z
+
+      # 编译ncnn gpu
+      - name: build gpu
         run: |
           export VULKAN_SDK=`pwd`/vulkansdk-macos-1.2.162.0/macOS
           cd ncnn-${{ env.NCNN_VERSION }}
-          chmod a+x build-ncnn-mac-gpu.sh &&./build-ncnn-mac-gpu.sh
+          chmod a+x build-ncnn-gpu.sh &&./build-ncnn-gpu.sh
 
-      # install文件夹改名macos，并使用7z压缩
+      # install文件夹改名linux，并使用7z压缩
       - name: 7zip
         run: |
-          cd ncnn-${{ env.NCNN_VERSION }}/build-mac-Release-GPU
-          mv install macos
+          mv ncnn-${{ env.NCNN_VERSION }}/build-Release-GPU/install macos
           7z a ${{ env.GPU_PKG_NAME }}.7z macos
+
+      # 上传artifact
+      - name: upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.GPU_PKG_NAME }}
+          path: ${{ env.GPU_PKG_NAME }}.7z
+
+  windows-vs2017:
+    runs-on: windows-2016
+
+    env:
+      NCNN_VERSION: 20210322
+      CPU_PKG_NAME: ncnn-20210322-windows-vs2017
+
+    steps:
+      # 检出代码
+      - uses: actions/checkout@v2
+
+      # 检出ncnn
+      - name: checkout ncnn
+        uses: actions/checkout@v2
+        with:
+          repository: Tencent/ncnn
+          path: ncnn-${{ env.NCNN_VERSION }}
+          ref: ${{ env.NCNN_VERSION }}
+          submodules: recursive
+
+      # 复制编译脚本
+      - name: copy build script
+        run: |
+          cp build-ncnn-cpu-vs2017.bat ncnn-${{ env.NCNN_VERSION }}
+          cp ncnn_cmake_options.txt ncnn-${{ env.NCNN_VERSION }}
+
+      # 编译ncnn
+      - name: build
+        run: |
+          cd ncnn-${{ env.NCNN_VERSION }}
+          ./build-ncnn-cpu-vs2017.bat
+
+      # install文件夹改名，并使用7z压缩
+      - name: rename
+        run: |
+          mv ncnn-${{ env.NCNN_VERSION }}/build-v141-x64/install windows-x64
+          mv ncnn-${{ env.NCNN_VERSION }}/build-v141-Win32/install windows-x86
+          7z a ${{ env.CPU_PKG_NAME }}.7z windows-x64 windows-x86
+
+      # 上传artifact
+      - name: upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.CPU_PKG_NAME }}
+          path: |
+            ${{ env.CPU_PKG_NAME }}.7z
+
+  windows-vs2019:
+    runs-on: windows-2019
+
+    env:
+      NCNN_VERSION: 20210322
+      CPU_PKG_NAME: ncnn-20210322-windows-vs2019
+
+    steps:
+      # 检出代码
+      - uses: actions/checkout@v2
+
+      # 检出ncnn
+      - name: checkout ncnn
+        uses: actions/checkout@v2
+        with:
+          repository: Tencent/ncnn
+          path: ncnn-${{ env.NCNN_VERSION }}
+          ref: ${{ env.NCNN_VERSION }}
+          submodules: recursive
+
+      # 复制编译脚本
+      - name: copy build script
+        run: |
+          cp build-ncnn-cpu-vs2019.bat ncnn-${{ env.NCNN_VERSION }}
+          cp ncnn_cmake_options.txt ncnn-${{ env.NCNN_VERSION }}
+
+      # 编译ncnn
+      - name: build
+        run: |
+          cd ncnn-${{ env.NCNN_VERSION }}
+          ./build-ncnn-cpu-vs2019.bat
+
+      # install文件夹改名，并使用7z压缩
+      - name: rename
+        run: |
+          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-x64/install windows-x64
+          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-Win32/install windows-x86
+          7z a ${{ env.CPU_PKG_NAME }}.7z windows-x64 windows-x86
+
+      # 上传artifact
+      - name: upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.CPU_PKG_NAME }}
+          path: |
+            ${{ env.CPU_PKG_NAME }}.7z
+
+  release:
+    needs: [ ubuntu1604, macos1015, windows-vs2017, windows-vs2019 ]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # 检出代码
+      - uses: actions/checkout@v2
+
+      # 获取所有的git log和tag
+      - name: Unshallow
+        run: git fetch --prune --unshallow
 
       # 获取git log 从 previousTag 到 lastTag
       - name: Get git log
@@ -105,30 +299,6 @@ jobs:
           log=$(git log $previousTag..$lastTag --pretty=format:'- %cd %an: %s\n' --date=format:'%Y-%m-%d %H:%M:%S')
           echo "$log"
           echo "::set-output name=log::"$log""
-
-      # 获取指定时区的时间
-      # https://github.com/marketplace/actions/get-time-action
-      - name: Get Time
-        id: time
-        uses: JantHsueh/get-time-action@master
-        with:
-          timeZone: 8
-
-      # 显示信息
-      - name: Show info
-        if: always()
-        run: |
-          echo '${{ steps.git-log.outputs.log }}'
-
-      # 向钉钉发送消息
-      # https://github.com/marketplace/actions/web-request-action
-      - name: dingtalk
-        uses: satak/webrequest-action@master
-        with:
-          url: ${{ secrets.DINGTALK_WEBHOOK }}
-          method: POST
-          payload: '{"msgtype": "text", "text": {"content": "版本更新: ${{ github.repository }}-版本号: ${{ github.ref }} \n 编译时间： ${{ steps.time.outputs.time }} \n 距上个正式版的更新记录: \n${{ steps.git-log.outputs.log }}"}}'
-          headers: '{"Content-Type": "application/json"}'
 
       # 创建Changelog文件 triggered by git tag push
       - name: Generate Changelog
@@ -142,16 +312,110 @@ jobs:
         run: |
           cat Release.txt
 
-      # 创建Release triggered by git tag push
-      # https://github.com/marketplace/actions/gh-release
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+      # 下载artifact
+      - name: download
+        uses: actions/download-artifact@v2
         with:
-          body_path: Release.txt
-          draft: true
-          files: |
-            ncnn-${{ env.NCNN_VERSION }}/build-mac-Release-CPU/${{ env.CPU_PKG_NAME }}.7z
-            ncnn-${{ env.NCNN_VERSION }}/build-mac-Release-GPU/${{ env.GPU_PKG_NAME }}.7z
+          path: artifacts
+
+      # 查看artifact
+      - name: list artifact
+        run: |
+          tree artifacts
+
+      # 创建release
+      - name: create-release
+        id: create-release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body_path: Release.txt
+          draft: false
+          prerelease: false
+
+      - name: upload-ubuntu1604-cpu
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG_NAME: ncnn-20210322-ubuntu1604
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
+          asset_name: ${{ env.PKG_NAME }}.7z
+          asset_content_type: application/x-7z-compressed
+
+      - name: upload-ubuntu1604-gpu
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG_NAME: ncnn-20210322-ubuntu1604-vulkan
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
+          asset_name: ${{ env.PKG_NAME }}.7z
+          asset_content_type: application/x-7z-compressed
+
+      - name: upload-macos1015-cpu
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG_NAME: ncnn-20210322-macos1015
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
+          asset_name: ${{ env.PKG_NAME }}.7z
+          asset_content_type: application/x-7z-compressed
+
+      - name: upload-macos1015-gpu
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG_NAME: ncnn-20210322-macos1015-vulkan
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
+          asset_name: ${{ env.PKG_NAME }}.7z
+          asset_content_type: application/x-7z-compressed
+
+      - name: upload-windows-vs2017
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG_NAME: ncnn-20210322-windows-vs2017
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
+          asset_name: ${{ env.PKG_NAME }}.7z
+          asset_content_type: application/x-7z-compressed
+
+      - name: upload-windows-vs2019
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG_NAME: ncnn-20210322-windows-vs2019
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
+          asset_name: ${{ env.PKG_NAME }}.7z
+          asset_content_type: application/x-7z-compressed
+
+      # 获取指定时区的时间
+      # https://github.com/marketplace/actions/get-time-action
+      - name: Get Time
+        id: time
+        uses: JantHsueh/get-time-action@master
+        with:
+          timeZone: 8
+
+      # 向钉钉发送消息
+      # https://github.com/marketplace/actions/web-request-action
+      - name: dingtalk
+        uses: satak/webrequest-action@master
+        with:
+          url: ${{ secrets.DINGTALK_WEBHOOK }}
+          method: POST
+          payload: '{"msgtype": "text", "text": {"content": "版本更新: ${{ github.repository }}-版本号: ${{ github.ref }} \n 编译时间： ${{ steps.time.outputs.time }} \n 距上个正式版的更新记录: \n${{ steps.git-log.outputs.log }}"}}'
+          headers: '{"Content-Type": "application/json"}'

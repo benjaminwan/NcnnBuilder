@@ -26,7 +26,7 @@ Xcode Command Line Tools >= 12
 
 2. 同步[ncnn源代码](https://github.com/Tencent/ncnn) 到ncnn文件夹
 
-3. 复制[编译脚本cpu](build-ncnn-mac-cpu.sh)和[编译脚本gpu](build-ncnn-mac-gpu.sh) 到ncnn文件夹
+3. 复制[编译脚本cpu](build-ncnn-cpu.sh)和[编译脚本gpu](build-ncnn-gpu.sh) 到ncnn文件夹
 
 执行```chmod a+x build-ncnn-mac-cpu.sh &&./build-ncnn-mac-cpu.sh```
 
