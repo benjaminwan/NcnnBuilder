@@ -4,11 +4,6 @@ function cmakeParamsMac() {
   mkdir -p "build-$1-GPU"
   pushd "build-$1-GPU"
   cmake -DCMAKE_BUILD_TYPE=$1 \
-    -DOpenMP_C_FLAGS="-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" \
-    -DOpenMP_CXX_FLAGS="-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" \
-    -DOpenMP_CXX_LIB_NAMES="omp" \
-    -DOpenMP_C_LIB_NAMES="omp" \
-    -DOpenMP_omp_LIBRARY=/usr/local/opt/libomp/lib/libomp.dylib \
     $(cat ../ncnn_cmake_options.txt) \
     -DNCNN_VULKAN=ON \
     ..
