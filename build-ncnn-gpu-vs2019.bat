@@ -1,4 +1,4 @@
-:: build opencv 4.5.x for windows by benjaminwan
+:: build ncnn for windows by benjaminwan
 @ECHO OFF
 chcp 65001
 cls
