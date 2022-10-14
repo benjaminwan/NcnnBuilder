@@ -42,7 +42,7 @@ sudo apt-get install build-essential cmake
 
 安装[HomeBrew](https://brew.sh/)
 
-安装libomp
+安装libomp(20220420开始禁用了openmp)
 ```brew install cmake libomp```
 
 安装CommandLineTools
@@ -86,3 +86,15 @@ vs2019环境，复制[编译脚本vs2019](build-ncnn-cpu-vs2019.bat)和[cmake选
 
 4. 开始菜单打开"x64 Native Tools Command Prompt for VS 2019"或"适用于 VS2017 的 x64 本机工具"，
    运行对应的编译脚本，编译结果在：ncnn/build-xxx-xxx/install
+
+### 关于Windows静态链接CRT
+
+编译选项添加NCNN_BUILD_WITH_STATIC_CRT=ON
+
+#### 20221013
+
+- ncnn: 20220729
+- vulkan: 1.2.189.0
+- windows平台，更早版本的包均为md版，从此版增加链接静态CRT版本(mt)
+- 后缀md: NCNN_BUILD_WITH_STATIC_CRT=OFF
+- 后缀mt: NCNN_BUILD_WITH_STATIC_CRT=ON
