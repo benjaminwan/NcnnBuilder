@@ -30,20 +30,11 @@ jobs:
 
       # 安装vulkan
       - name: vulkansdk
-        if: steps.cache-vulkansdk.outputs.cache-hit != 'true'
         run: |
-          wget https://sdk.lunarg.com/sdk/download/1.2.148.1/linux/vulkansdk-linux-x86_64-1.2.148.1.tar.gz?Human=true -O vulkansdk-linux-x86_64-1.2.148.1.tar.gz
-          tar -xf vulkansdk-linux-x86_64-1.2.148.1.tar.gz
-          rm -rf 1.2.148.1/source 1.2.148.1/samples
-          find 1.2.148.1 -type f | grep -v -E 'vulkan|glslang' | xargs rm
-
-      # 缓存vulkan
-      - name: cache-vulkansdk
-        id: cache-vulkansdk
-        uses: actions/cache@v1
-        with:
-          path: "1.2.148.1"
-          key: vulkansdk-linux-x86_64-1.2.148.1
+          wget https://sdk.lunarg.com/sdk/download/1.2.189.0/linux/vulkansdk-linux-x86_64-1.2.189.0.tar.gz?Human=true -O vulkansdk-linux-x86_64-1.2.189.0.tar.gz
+          tar -xf vulkansdk-linux-x86_64-1.2.189.0.tar.gz
+          rm -rf 1.2.189.0/source 1.2.189.0/samples
+          find 1.2.189.0 -type f | grep -v -E 'vulkan|glslang' | xargs rm
 
       # 复制编译脚本
       - name: copy build script
@@ -75,7 +66,8 @@ jobs:
       # 编译ncnn gpu
       - name: build gpu
         run: |
-          export VULKAN_SDK=`pwd`/1.2.148.1/x86_64
+          export VULKAN_SDK=`pwd`/1.2.189.0/x86_64
+          export PATH=`pwd`/1.2.189.0/x86_64/bin:$PATH
           cd ncnn-${{ env.NCNN_VERSION }}
           chmod a+x build-ncnn-gpu.sh &&./build-ncnn-gpu.sh
 
@@ -121,22 +113,11 @@ jobs:
 
       # 安装vulkan
       - name: vulkansdk
-        if: steps.cache-vulkansdk.outputs.cache-hit != 'true'
         run: |
-          wget https://sdk.lunarg.com/sdk/download/1.2.162.0/mac/vulkansdk-macos-1.2.162.0.dmg?Human=true -O vulkansdk-macos-1.2.162.0.dmg
-          hdiutil attach vulkansdk-macos-1.2.162.0.dmg
-          cp -r /Volumes/vulkansdk-macos-1.2.162.0 .
-          rm -rf vulkansdk-macos-1.2.162.0/Applications
-          find vulkansdk-macos-1.2.162.0 -type f | grep -v -E 'vulkan|glslang|MoltenVK' | xargs rm
-          hdiutil detach /Volumes/vulkansdk-macos-1.2.162.0
-
-      # 缓存vulkan
-      - name: cache-vulkansdk
-        id: cache-vulkansdk
-        uses: actions/cache@v1
-        with:
-          path: vulkansdk-macos-1.2.162.0
-          key: vulkansdk-macos-1.2.162.0
+          wget https://sdk.lunarg.com/sdk/download/1.2.189.0/mac/vulkansdk-macos-1.2.189.0.dmg?Human=true -O vulkansdk-macos-1.2.189.0.dmg
+          hdiutil attach vulkansdk-macos-1.2.189.0.dmg
+          sudo /Volumes/vulkansdk-macos-1.2.189.0/InstallVulkan.app/Contents/MacOS/InstallVulkan --root $GITHUB_WORKSPACE/vulkansdk-macos-1.2.189.0 --accept-licenses --default-answer --confirm-command install
+          hdiutil detach /Volumes/vulkansdk-macos-1.2.189.0
 
       # 复制编译脚本
       - name: copy build script
@@ -168,7 +149,7 @@ jobs:
       # 编译ncnn gpu
       - name: build gpu
         run: |
-          export VULKAN_SDK=`pwd`/vulkansdk-macos-1.2.162.0/macOS
+          export VULKAN_SDK=$GITHUB_WORKSPACE/vulkansdk-macos-1.2.189.0/macOS
           cd ncnn-${{ env.NCNN_VERSION }}
           chmod a+x build-ncnn-gpu.sh &&./build-ncnn-gpu.sh
 
@@ -178,95 +159,6 @@ jobs:
           mv ncnn-${{ env.NCNN_VERSION }}/build-Release-GPU/install macos
           7z a ${{ env.GPU_PKG_NAME }}.7z macos
           rm -r -f macos
-
-      # 上传artifact
-      - name: upload
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.GPU_PKG_NAME }}
-          path: ${{ env.GPU_PKG_NAME }}.7z
-
-  windows-vs2017:
-    runs-on: windows-2016
-
-    env:
-      NCNN_VERSION: 20220729
-      CPU_PKG_NAME: ncnn-20220729-windows-vs2017
-      GPU_PKG_NAME: ncnn-20220729-windows-vs2017-vulkan
-
-    steps:
-      # 检出代码
-      - uses: actions/checkout@v3
-
-      # 检出ncnn
-      - name: checkout ncnn
-        uses: actions/checkout@v3
-        with:
-          repository: Tencent/ncnn
-          path: ncnn-${{ env.NCNN_VERSION }}
-          ref: ${{ env.NCNN_VERSION }}
-          submodules: recursive
-
-      # 安装vulkan
-      - name: vulkansdk
-        if: steps.cache-vulkansdk.outputs.cache-hit != 'true'
-        run: |
-          Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.2.162.0/windows/VulkanSDK-1.2.162.0-Installer.exe?Human=true -OutFile VulkanSDK-1.2.162.0-Installer.exe
-          7z x -aoa ./VulkanSDK-1.2.162.0-Installer.exe -oVulkanSDK
-          Remove-Item .\VulkanSDK\Demos, .\VulkanSDK\Samples, .\VulkanSDK\Third-Party, .\VulkanSDK\Tools, .\VulkanSDK\Tools32 -Recurse
-
-      # 缓存vulkan
-      - name: cache-vulkansdk
-        id: cache-vulkansdk
-        uses: actions/cache@v1.0.3
-        with:
-          path: "VulkanSDK"
-          key: VulkanSDK-1.2.162.0-Installer
-
-      # 复制编译脚本
-      - name: copy build script
-        run: |
-          cp build-ncnn-cpu-vs2017.bat ncnn-${{ env.NCNN_VERSION }}
-          cp build-ncnn-gpu-vs2017.bat ncnn-${{ env.NCNN_VERSION }}
-          cp ncnn_cmake_options.txt ncnn-${{ env.NCNN_VERSION }}
-
-      # 编译ncnn cpu
-      - name: build cpu
-        run: |
-          cd ncnn-${{ env.NCNN_VERSION }}
-          ./build-ncnn-cpu-vs2017.bat
-
-      # install文件夹改名，并使用7z压缩
-      - name: 7zip
-        run: |
-          mv ncnn-${{ env.NCNN_VERSION }}/build-v141-x64-cpu/install windows-x64
-          mv ncnn-${{ env.NCNN_VERSION }}/build-v141-Win32-cpu/install windows-x86
-          7z a ${{ env.CPU_PKG_NAME }}.7z windows-x64 windows-x86
-          rm -r -Force windows-x64
-          rm -r -Force windows-x86
-
-      # 上传artifact
-      - name: upload
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.CPU_PKG_NAME }}
-          path: ${{ env.CPU_PKG_NAME }}.7z
-
-      # 编译ncnn gpu
-      - name: build gpu
-        run: |
-          $env:VULKAN_SDK="$(pwd)/VulkanSDK"
-          cd ncnn-${{ env.NCNN_VERSION }}
-          ./build-ncnn-gpu-vs2017.bat
-
-      # install文件夹改名，并使用7z压缩
-      - name: 7zip
-        run: |
-          mv ncnn-${{ env.NCNN_VERSION }}/build-v141-x64-gpu/install windows-x64
-          mv ncnn-${{ env.NCNN_VERSION }}/build-v141-Win32-gpu/install windows-x86
-          7z a ${{ env.GPU_PKG_NAME }}.7z windows-x64 windows-x86
-          rm -r -Force windows-x64
-          rm -r -Force windows-x86
 
       # 上传artifact
       - name: upload
@@ -298,19 +190,10 @@ jobs:
 
       # 安装vulkan
       - name: vulkansdk
-        if: steps.cache-vulkansdk.outputs.cache-hit != 'true'
         run: |
-          Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.2.162.0/windows/VulkanSDK-1.2.162.0-Installer.exe?Human=true -OutFile VulkanSDK-1.2.162.0-Installer.exe
-          7z x -aoa ./VulkanSDK-1.2.162.0-Installer.exe -oVulkanSDK
-          Remove-Item .\VulkanSDK\Demos, .\VulkanSDK\Samples, .\VulkanSDK\Third-Party, .\VulkanSDK\Tools, .\VulkanSDK\Tools32 -Recurse
-
-      # 缓存vulkan
-      - name: cache-vulkansdk
-        id: cache-vulkansdk
-        uses: actions/cache@v1.0.3
-        with:
-          path: "VulkanSDK"
-          key: VulkanSDK-1.2.162.0-Installer
+          Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.2.189.0/windows/VulkanSDK-1.2.189.0-Installer.exe?Human=true -OutFile VulkanSDK.exe
+          $installer = Start-Process -FilePath VulkanSDK.exe -Wait -PassThru -ArgumentList @("/S");
+          $installer.WaitForExit();
 
       # 复制编译脚本
       - name: copy build script
@@ -328,44 +211,69 @@ jobs:
       # install文件夹改名，并使用7z压缩
       - name: 7zip
         run: |
-          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-x64-cpu/install windows-x64
-          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-Win32-cpu/install windows-x86
-          7z a ${{ env.CPU_PKG_NAME }}.7z windows-x64 windows-x86
+          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-x64-md-cpu/install windows-x64
+          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-Win32-md-cpu/install windows-x86
+          7z a ${{ env.CPU_PKG_NAME }}-md.7z windows-x64 windows-x86
+          rm -r -Force windows-x64
+          rm -r -Force windows-x86
+          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-x64-mt-cpu/install windows-x64
+          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-Win32-mt-cpu/install windows-x86
+          7z a ${{ env.CPU_PKG_NAME }}-mt.7z windows-x64 windows-x86
           rm -r -Force windows-x64
           rm -r -Force windows-x86
 
-      # 上传artifact
-      - name: upload
+      # 上传artifact md
+      - name: upload-md
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.CPU_PKG_NAME }}
-          path: ${{ env.CPU_PKG_NAME }}.7z
+          name: ${{ env.CPU_PKG_NAME }}-md
+          path: ${{ env.CPU_PKG_NAME }}-md.7z
+
+      # 上传artifact mt
+      - name: upload-mt
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.CPU_PKG_NAME }}-mt
+          path: ${{ env.CPU_PKG_NAME }}-mt.7z
 
       # 编译ncnn gpu
       - name: build gpu
         run: |
-          $env:VULKAN_SDK="$(pwd)/VulkanSDK"
+          $env:VULKAN_SDK="C:/VulkanSDK/1.2.189.0"
+          $env:Path+=";C:/VulkanSDK/1.2.189.0/Bin"
           cd ncnn-${{ env.NCNN_VERSION }}
           ./build-ncnn-gpu-vs2019.bat
 
       # install文件夹改名，并使用7z压缩
       - name: 7zip
         run: |
-          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-x64-gpu/install windows-x64
-          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-Win32-gpu/install windows-x86
-          7z a ${{ env.GPU_PKG_NAME }}.7z windows-x64 windows-x86
+          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-x64-md-gpu/install windows-x64
+          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-Win32-md-gpu/install windows-x86
+          7z a ${{ env.GPU_PKG_NAME }}-md.7z windows-x64 windows-x86
+          rm -r -Force windows-x64
+          rm -r -Force windows-x86
+          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-x64-mt-gpu/install windows-x64
+          mv ncnn-${{ env.NCNN_VERSION }}/build-v142-Win32-mt-gpu/install windows-x86
+          7z a ${{ env.GPU_PKG_NAME }}-mt.7z windows-x64 windows-x86
           rm -r -Force windows-x64
           rm -r -Force windows-x86
 
       # 上传artifact
-      - name: upload
+      - name: upload-md
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.GPU_PKG_NAME }}
-          path: ${{ env.GPU_PKG_NAME }}.7z
+          name: ${{ env.GPU_PKG_NAME }}-md
+          path: ${{ env.GPU_PKG_NAME }}-md.7z
+
+      # 上传artifact
+      - name: upload-mt
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.GPU_PKG_NAME }}-mt
+          path: ${{ env.GPU_PKG_NAME }}-mt.7z
 
   release:
-    needs: [ ubuntu1804, macos1015, windows-vs2017, windows-vs2019 ]
+    needs: [ ubuntu1804, macos1015, windows-vs2019 ]
 
     runs-on: ubuntu-latest
 
@@ -468,44 +376,44 @@ jobs:
           asset_name: ${{ env.PKG_NAME }}.7z
           asset_content_type: application/x-7z-compressed
 
-      - name: upload-windows-vs2017-cpu
+      - name: upload-windows-vs2019-cpu-md
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ncnn-20220729-windows-vs2017
+          PKG_NAME: ncnn-20220729-windows-vs2019-md
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
           asset_name: ${{ env.PKG_NAME }}.7z
           asset_content_type: application/x-7z-compressed
 
-      - name: upload-windows-vs2017-gpu
+      - name: upload-windows-vs2019-gpu-md
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ncnn-20220729-windows-vs2017-vulkan
+          PKG_NAME: ncnn-20220729-windows-vs2019-vulkan-md
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
           asset_name: ${{ env.PKG_NAME }}.7z
           asset_content_type: application/x-7z-compressed
 
-      - name: upload-windows-vs2019-cpu
+      - name: upload-windows-vs2019-cpu-mt
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ncnn-20220729-windows-vs2019
+          PKG_NAME: ncnn-20220729-windows-vs2019-mt
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
           asset_name: ${{ env.PKG_NAME }}.7z
           asset_content_type: application/x-7z-compressed
 
-      - name: upload-windows-vs2019-gpu
+      - name: upload-windows-vs2019-gpu-mt
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ncnn-20220729-windows-vs2019-vulkan
+          PKG_NAME: ncnn-20220729-windows-vs2019-vulkan-mt
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
