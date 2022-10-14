@@ -17,11 +17,11 @@ jobs:
 
     steps:
       # 检出代码
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # 检出ncnn
       - name: checkout ncnn
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: Tencent/ncnn
           path: ncnn-${{ env.NCNN_VERSION }}
@@ -67,7 +67,7 @@ jobs:
 
       # 上传artifact
       - name: upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.CPU_PKG_NAME }}
           path: ${{ env.CPU_PKG_NAME }}.7z
@@ -88,7 +88,7 @@ jobs:
 
       # 上传artifact
       - name: upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.GPU_PKG_NAME }}
           path: ${{ env.GPU_PKG_NAME }}.7z
@@ -103,11 +103,11 @@ jobs:
 
     steps:
       # 检出代码
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # 检出ncnn
       - name: checkout ncnn
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: Tencent/ncnn
           path: ncnn-${{ env.NCNN_VERSION }}
@@ -160,7 +160,7 @@ jobs:
 
       # 上传artifact
       - name: upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.CPU_PKG_NAME }}
           path: ${{ env.CPU_PKG_NAME }}.7z
@@ -181,7 +181,7 @@ jobs:
 
       # 上传artifact
       - name: upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.GPU_PKG_NAME }}
           path: ${{ env.GPU_PKG_NAME }}.7z
@@ -196,11 +196,11 @@ jobs:
 
     steps:
       # 检出代码
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # 检出ncnn
       - name: checkout ncnn
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: Tencent/ncnn
           path: ncnn-${{ env.NCNN_VERSION }}
@@ -247,7 +247,7 @@ jobs:
 
       # 上传artifact
       - name: upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.CPU_PKG_NAME }}
           path: ${{ env.CPU_PKG_NAME }}.7z
@@ -270,7 +270,7 @@ jobs:
 
       # 上传artifact
       - name: upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.GPU_PKG_NAME }}
           path: ${{ env.GPU_PKG_NAME }}.7z
@@ -285,11 +285,11 @@ jobs:
 
     steps:
       # 检出代码
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # 检出ncnn
       - name: checkout ncnn
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: Tencent/ncnn
           path: ncnn-${{ env.NCNN_VERSION }}
@@ -336,7 +336,7 @@ jobs:
 
       # 上传artifact
       - name: upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.CPU_PKG_NAME }}
           path: ${{ env.CPU_PKG_NAME }}.7z
@@ -359,7 +359,7 @@ jobs:
 
       # 上传artifact
       - name: upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.GPU_PKG_NAME }}
           path: ${{ env.GPU_PKG_NAME }}.7z
@@ -371,7 +371,7 @@ jobs:
 
     steps:
       # 检出代码
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # 获取所有的git log和tag
       - name: Unshallow
@@ -402,7 +402,7 @@ jobs:
 
       # 下载artifact
       - name: download
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: artifacts
 
