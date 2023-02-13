@@ -192,7 +192,7 @@ jobs:
       - name: vulkansdk
         run: |
           Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.3.236.0/windows/VulkanSDK-1.3.236.0-Installer.exe?Human=true -OutFile VulkanSDK.exe
-          .\VulkanSDK.exe --accept-licenses --default-answer --confirm-command install
+          .\VulkanSDK.exe --accept-licenses --default-answer --confirm-command install "com.lunarg.vulkan.debug32" "com.lunarg.vulkan.sdl2" "com.lunarg.vulkan.32bit" "com.lunarg.vulkan" "com.lunarg.vulkan.glm" "com.lunarg.vulkan.vma" "com.lunarg.vulkan.core" "com.lunarg.vulkan.32bit" "com.lunarg.vulkan.volk" "com.lunarg.vulkan.debug"
 
       # 复制编译脚本
       - name: copy build script
