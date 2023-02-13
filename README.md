@@ -80,8 +80,6 @@ sudo xcode-select --install
 
 3. 复制编译脚本和cmake选项
 
-vs2017环境，复制[编译脚本vs2017](build-ncnn-cpu-vs2017.bat)和[cmake选项](ncnn_cmake_options.txt)到ncnn文件夹
-
 vs2019环境，复制[编译脚本vs2019](build-ncnn-cpu-vs2019.bat)和[cmake选项](ncnn_cmake_options.txt)到ncnn文件夹
 
 4. 开始菜单打开"x64 Native Tools Command Prompt for VS 2019"或"适用于 VS2017 的 x64 本机工具"，
@@ -98,3 +96,7 @@ vs2019环境，复制[编译脚本vs2019](build-ncnn-cpu-vs2019.bat)和[cmake选
 - windows平台，更早版本的包均为md版，从此版增加链接静态CRT版本(mt)
 - 后缀md: NCNN_BUILD_WITH_STATIC_CRT=OFF
 - 后缀mt: NCNN_BUILD_WITH_STATIC_CRT=ON
+
+#### 20230213
+- ncnn: 20221128
+- vulkan: 1.3.236.0
