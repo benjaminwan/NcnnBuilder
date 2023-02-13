@@ -11,9 +11,9 @@ jobs:
     runs-on: ubuntu-18.04
 
     env:
-      NCNN_VERSION: 20220729
-      CPU_PKG_NAME: ncnn-20220729-ubuntu1804
-      GPU_PKG_NAME: ncnn-20220729-ubuntu1804-vulkan
+      NCNN_VERSION: 20221128
+      CPU_PKG_NAME: ncnn-20221128-ubuntu1804
+      GPU_PKG_NAME: ncnn-20221128-ubuntu1804-vulkan
 
     steps:
       # 检出代码
@@ -89,9 +89,9 @@ jobs:
     runs-on: macos-latest
 
     env:
-      NCNN_VERSION: 20220729
-      CPU_PKG_NAME: ncnn-20220729-macos1015
-      GPU_PKG_NAME: ncnn-20220729-macos1015-vulkan
+      NCNN_VERSION: 20221128
+      CPU_PKG_NAME: ncnn-20221128-macos1015
+      GPU_PKG_NAME: ncnn-20221128-macos1015-vulkan
 
     steps:
       # 检出代码
@@ -171,9 +171,9 @@ jobs:
     runs-on: windows-2019
 
     env:
-      NCNN_VERSION: 20220729
-      CPU_PKG_NAME: ncnn-20220729-windows-vs2019
-      GPU_PKG_NAME: ncnn-20220729-windows-vs2019-vulkan
+      NCNN_VERSION: 20221128
+      CPU_PKG_NAME: ncnn-20221128-windows-vs2019
+      GPU_PKG_NAME: ncnn-20221128-windows-vs2019-vulkan
 
     steps:
       # 检出代码
@@ -335,7 +335,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ncnn-20220729-ubuntu1804
+          PKG_NAME: ncnn-20221128-ubuntu1804
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
@@ -346,7 +346,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ncnn-20220729-ubuntu1804-vulkan
+          PKG_NAME: ncnn-20221128-ubuntu1804-vulkan
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
@@ -357,7 +357,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ncnn-20220729-macos1015
+          PKG_NAME: ncnn-20221128-macos1015
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
@@ -368,7 +368,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ncnn-20220729-macos1015-vulkan
+          PKG_NAME: ncnn-20221128-macos1015-vulkan
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
@@ -379,7 +379,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ncnn-20220729-windows-vs2019-md
+          PKG_NAME: ncnn-20221128-windows-vs2019-md
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
@@ -390,7 +390,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ncnn-20220729-windows-vs2019-vulkan-md
+          PKG_NAME: ncnn-20221128-windows-vs2019-vulkan-md
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
@@ -401,7 +401,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ncnn-20220729-windows-vs2019-mt
+          PKG_NAME: ncnn-20221128-windows-vs2019-mt
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
@@ -412,7 +412,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ncnn-20220729-windows-vs2019-vulkan-mt
+          PKG_NAME: ncnn-20221128-windows-vs2019-vulkan-mt
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: artifacts/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}.7z
